@@ -3,11 +3,11 @@ from typing import Annotated
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends,HTTPException
 from .db import get_session
-from config import settings
+from app.backend.config import settings
 from jose import jwt,JWTError
 from app.models.user import User
 from sqlalchemy import select
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 db_dependency = Annotated[AsyncSession,Depends(get_session)]
 
@@ -20,7 +20,7 @@ async def get_current_user(db:db_dependency,token:Annotated[str,Depends(oauth2_s
         headers={"WWW-Authenticate": "Bearer"}
     )
     try:
-        payload = jwt.decode(token,settings.SECRET_KEY,algorithms=[settings.ALGORITHM])
+        payload = jwt.decode(token,settings.ACCESS_TOKEN_SECRET_KEY,algorithms=[settings.ALGORITHM])
         email: str = payload.get("sub")
         if email is None:
             raise credentials_exception
