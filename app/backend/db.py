@@ -1,5 +1,5 @@
-from pydantic import DeclarativeBase
-from config import settings
+from sqlalchemy.orm import DeclarativeBase
+from app.backend.config import settings
 from sqlalchemy.ext.asyncio import create_async_engine,async_sessionmaker,AsyncSession
 
 engine = create_async_engine(settings.DATABASE_URL,echo=True)
