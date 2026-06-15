@@ -2,12 +2,12 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
-
+from app.backend.scraper import get_current_price
 from app.schemas.item import ItemCreate, ItemResponse
 from app.backend.dependencies import db_dependency, get_current_user
 from app.models.item import Item
 from app.models.user import User
-
+from app.models.price_history import PriceHistory
 router = APIRouter(prefix="/items", tags=["items"])
 
 
@@ -17,19 +17,30 @@ async def create_item(
     db: db_dependency,
     user: User = Depends(get_current_user)
 ):
+    fetched_price = await get_current_price(str(item.url))
+
     new_item = Item(
         title=item.title,
         url=str(item.url),
-        current_price=None,
+        current_price=fetched_price,
         user_id=user.id
     )
     db.add(new_item)
-    await db.commit()
-    await db.refresh(new_item)
+    await db.flush()
+    saved_item_id = new_item.id
+
+    if fetched_price is not None:
+        history_record = PriceHistory(
+            item_id=new_item.id,
+            price=fetched_price
+        )
+        db.add(history_record)
+
+        await db.commit()
 
     query = await db.execute(
         select(Item)
-        .where(Item.id == new_item.id)
+        .where(Item.id == saved_item_id)
         .options(selectinload(Item.price_histories))
     )
     return query.scalar_one()
