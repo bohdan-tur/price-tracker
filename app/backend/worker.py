@@ -11,8 +11,8 @@ from celery.schedules import crontab
 
 
 celery_app = Celery("price_tracker",
-                    broker="redis://localhost:6379/0",
-                    backend="redis://localhost:6379/0")
+                    broker="redis://redis:6379/0",
+                    backend="redis://redis:6379/0")
 
 
 celery_app.conf.update(
@@ -20,7 +20,8 @@ celery_app.conf.update(
                        accept_content=["json"],
                        result_serializer="json",
                        timezone="UTC",
-                       enable_utc=True
+                       enable_utc=True,
+                       broker_connection_retry_on_startup=True
 
                                                 )
 

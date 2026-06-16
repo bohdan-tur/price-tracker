@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: price_tracker_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 12345Feo
+      POSTGRES_DB: price_tracker
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: price_tracker_redis
+    ports:
+      - "6380:6379"
+
+  api:
+    build: .
+    container_name: price_tracker_api
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+
+    env_file:
+      - .env
+
+  celery_worker:
+    build: .
+    container_name: price_tracker_worker
+    command: celery -A app.backend.worker.celery_app worker --loglevel=info
+    depends_on:
+      - db
+      - redis
+      - api
+    env_file:
+      - .env
+
+  celery_beat:
+    build: .
+    container_name: price_tracker_beat
+    command: celery -A app.backend.worker.celery_app beat --loglevel=info
+    depends_on:
+      - db
+      - redis
+      - celery_worker
+    env_file:
+      - .env
+
+volumes:
+  postgres_data:
