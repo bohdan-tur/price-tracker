@@ -59,3 +59,18 @@ async def test_login_wrong_password(async_client: AsyncClient, create_test_user)
 
     assert response.status_code == 401
     assert response.json()["detail"] == "Incorrect password"
+
+async def test_protected_route_without_token(async_client):
+
+        response = await async_client.get("/items/")
+
+        assert response.status_code == 401
+        assert response.json()["detail"] == "Not authenticated"
+
+async def test_protected_route_with_invalid_token(async_client):
+
+        headers = {"Authorization": "Bearer fake_invalid_token_123"}
+        response = await async_client.get("/items/", headers=headers)
+
+        assert response.status_code == 401
+        assert response.json()["detail"] == "Could not validate credentials"
