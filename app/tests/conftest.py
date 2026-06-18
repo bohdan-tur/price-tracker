@@ -1,30 +1,34 @@
 import pytest_asyncio
-
+from sqlalchemy.pool import NullPool
+from app.models.user import User
 from httpx import AsyncClient, ASGITransport
 from app.main import app
 from app.backend.db import Base,get_session
 from sqlalchemy.ext.asyncio import create_async_engine,async_sessionmaker,AsyncSession
+import uuid
+from sqlalchemy import select
+from app.backend.security import get_password_hash
 
 
-DATABASE_URL ="postgresql+asyncpg://postgres:postgres@db:5432/test_postgres"
+DATABASE_URL ="postgresql+asyncpg://postgres:12345Feo@db:5432/test_postgres"
 
-test_engine = create_async_engine(DATABASE_URL,echo=False)
+test_engine = create_async_engine(DATABASE_URL,echo=False,poolclass=NullPool)
 
-test_session = async_sessionmaker(engine = test_engine,class_=AsyncSession,expire_on_commit=False)
+test_session = async_sessionmaker(bind = test_engine,class_=AsyncSession,expire_on_commit=False)
 
 
 
-@pytest_asyncio.fixture(autouse = True)
+@pytest_asyncio.fixture(autouse = True,scope="session")
 async def prepare_db():
     async with  test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-        yield
+    yield
 
     async with test_engine.begin() as conn:
 
         await conn.run_sync(Base.metadata.drop_all)
-
+    await test_engine.dispose()
 
 @pytest_asyncio.fixture
 async def db_session():
@@ -48,3 +52,28 @@ async def async_client(db_session):
          yield client
 
      app.dependency_overrides.clear()
+
+
+@pytest_asyncio.fixture
+async def create_test_user(db_session):
+    async def _create_test_user(email: str = None, is_superuser: bool = False):
+        if email is None:
+            email = f"user_{uuid.uuid4().hex[:8]}@test.com"
+
+        result = await db_session.execute(select(User).where(User.email == email))
+        existing_user = result.scalar_one_or_none()
+        if existing_user:
+            return existing_user
+
+        user = User(
+            email=email,
+            hashed_password=get_password_hash("secret123"),
+            is_active=True,
+            is_superuser=is_superuser
+        )
+        db_session.add(user)
+        await db_session.commit()
+        await db_session.refresh(user)
+        return user
+
+    return _create_test_user
