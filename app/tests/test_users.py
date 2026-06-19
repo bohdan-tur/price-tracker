@@ -131,3 +131,42 @@ async def test_hard_delete_user_by_admin(async_client: AsyncClient,create_test_u
     assert deleted_user is None
 
     app.dependency_overrides.pop(get_current_superuser)
+
+
+async def test_get_user_by_id_not_found(async_client: AsyncClient, create_test_user):
+    admin = await create_test_user(email="admin_get_404@test.com", is_superuser=True)
+    app.dependency_overrides[get_current_superuser] = lambda: admin
+
+
+    response = await async_client.get("/users/99999")
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "User not found"
+
+    app.dependency_overrides.pop(get_current_superuser)
+
+
+async def test_update_user_status_not_found(async_client: AsyncClient, create_test_user):
+    admin = await create_test_user(email="admin_status_404@test.com", is_superuser=True)
+    app.dependency_overrides[get_current_superuser] = lambda: admin
+
+
+    response = await async_client.patch("/users/99999/status")
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "User not found"
+
+    app.dependency_overrides.pop(get_current_superuser)
+
+
+async def test_hard_delete_user_not_found(async_client: AsyncClient, create_test_user):
+    admin = await create_test_user(email="admin_delete_404@test.com", is_superuser=True)
+    app.dependency_overrides[get_current_superuser] = lambda: admin
+
+
+    response = await async_client.delete("/users/99999")
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "User not found"
+
+    app.dependency_overrides.pop(get_current_superuser)
