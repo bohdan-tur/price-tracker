@@ -22,6 +22,8 @@ services:
   api:
     build: .
     container_name: price_tracker_api
+    environment:
+      - PYTHONPATH=/app
     ports:
       - "8000:8000"
     depends_on:
