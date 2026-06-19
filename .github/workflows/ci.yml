@@ -1,0 +1,42 @@
+name:  CI Pipeline
+
+
+on:
+  push:
+    branches:
+        - main
+  pull_request:
+    branches:
+        - main
+
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create .env file
+        run: |
+          echo "POSTGRES_USER=postgres" >> .env
+          echo "POSTGRES_PASSWORD=postgres" >> .env
+          echo "POSTGRES_DB=price_tracker_test" >> .env
+          echo "DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/price_tracker_test" >> .env
+          echo "SECRET_KEY=supersecretkey" >> .env
+
+      - name: Build and start containers
+        run: docker compose up -d --build
+
+      - name: Wait for services to be ready
+        run: sleep 10
+
+      - name: Run Pytest
+        run: docker compose exec -T api pytest
+
+      - name: Stop containers
+        if: always()
+        run: docker compose down
+
+
