@@ -25,6 +25,8 @@ jobs:
           echo "POSTGRES_DB=price_tracker_test" >> .env
           echo "DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/price_tracker_test" >> .env
           echo "SECRET_KEY=supersecretkey" >> .env
+          echo "ACCESS_TOKEN_SECRET_KEY=test_access_key" >> .env
+          echo "REFRESH_TOKEN_SECRET_KEY=test_refresh_key" >> .env
 
       - name: Build and start containers
         run: docker compose up -d --build
