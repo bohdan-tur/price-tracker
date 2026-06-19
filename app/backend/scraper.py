@@ -1,8 +1,10 @@
 import httpx
 import json
 import re
+import logging
 from bs4 import BeautifulSoup
 
+logger = logging.getLogger("root")
 
 COMMON_SELECTORS = [
     ".product_price_current",
@@ -11,6 +13,7 @@ COMMON_SELECTORS = [
     ".price__value",
     ".product-price"
 ]
+
 
 async def get_current_price(url: str) -> float | None:
     headers = {
@@ -25,7 +28,6 @@ async def get_current_price(url: str) -> float | None:
             response.raise_for_status()
             soup = BeautifulSoup(response.text, "lxml")
 
-
             scripts = soup.find_all("script", type="application/ld+json")
             for script in scripts:
                 try:
@@ -33,16 +35,16 @@ async def get_current_price(url: str) -> float | None:
                     if isinstance(data, list): data = data[0]
                     if data.get("@type") == "Product":
                         offers = data.get("offers")
-                        if isinstance(offers, dict): return float(offers.get("price"))
-                        elif isinstance(offers, list): return float(offers[0].get("price"))
+                        if isinstance(offers, dict):
+                            return float(offers.get("price"))
+                        elif isinstance(offers, list):
+                            return float(offers[0].get("price"))
                 except (ValueError, KeyError, TypeError):
                     continue
-
 
             price_meta = soup.find("meta", property="product:price:amount")
             if price_meta:
                 return float(price_meta["content"])
-
 
             price_element = soup.select_one(", ".join(COMMON_SELECTORS))
             if price_element:
@@ -52,8 +54,10 @@ async def get_current_price(url: str) -> float | None:
                 if cleaned_text and len(cleaned_text) < 10:
                     return float(cleaned_text)
 
+            logger.warning(f"Price not found in HTML for {url}")
+
         except Exception as e:
-            print(f"Parsing error for {url}: {e}")
+            logger.error(f"Parsing error for {url}: {e}")
             return None
 
     return None
