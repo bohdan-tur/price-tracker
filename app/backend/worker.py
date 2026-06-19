@@ -1,3 +1,4 @@
+import logging
 from celery import Celery
 from datetime import UTC
 from app.backend.db import AsyncSessionLocal
@@ -9,25 +10,26 @@ from app.models.price_history import PriceHistory
 from celery.schedules import crontab
 from app.backend.dependencies import db_dependency
 
+logger = logging.getLogger("root")
 
 celery_app = Celery("price_tracker",
                     broker="redis://redis:6379/0",
                     backend="redis://redis:6379/0")
 
-
 celery_app.conf.update(
-                       task_serializer="json",
-                       accept_content=["json"],
-                       result_serializer="json",
-                       timezone="UTC",
-                       enable_utc=True,
-                       broker_connection_retry_on_startup=True
+    task_serializer="json",
+    accept_content=["json"],
+    result_serializer="json",
+    timezone="UTC",
+    enable_utc=True,
+    broker_connection_retry_on_startup=True
+)
 
-                                                )
 
-
-async def process_prices_async(db:db_dependency) -> dict:
+async def process_prices_async(db: db_dependency) -> dict:
     changes_count = 0
+    logger.info("Started processing prices update task.")
+
     try:
         result = await db.execute(select(Item))
         items = result.scalars().all()
@@ -36,6 +38,8 @@ async def process_prices_async(db:db_dependency) -> dict:
             new_price = await get_current_price(str(item.url))
 
             if new_price and new_price != item.current_price:
+                logger.info(f"Price updated for item {item.id}: {item.current_price} -> {new_price}")
+
                 new_price_history = PriceHistory(
                     item_id=item.id,
                     price=new_price
@@ -46,12 +50,13 @@ async def process_prices_async(db:db_dependency) -> dict:
                 changes_count += 1
 
         await db.commit()
+        logger.info(f"Price update task completed. Items updated: {changes_count}")
         return {"status": "success", "updated_items": changes_count}
 
     except Exception as e:
         await db.rollback()
+        logger.error(f"Error during price processing: {str(e)}")
         return {"status": "error", "detail": str(e)}
-
 
 
 @celery_app.task(name="update_item_prices")
@@ -63,13 +68,9 @@ def update_item_prices() -> dict:
     return asyncio.run(_run_task())
 
 
-
-
 celery_app.conf.beat_schedule = {
-
     "update-prices-daily": {
-
         "task": "update_item_prices",
-        "schedule": crontab(hour=3,minute=0)
+        "schedule": crontab(hour=3, minute=0)
     }
 }
