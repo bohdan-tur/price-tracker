@@ -38,7 +38,7 @@ jobs:
         run: docker compose logs api
 
       - name: Run Pytest
-        run: docker compose exec -T api pytest
+        run: docker compose exec -T api pytest -v -s
 
       - name: Stop containers
         if: always()
