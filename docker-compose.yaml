@@ -10,7 +10,7 @@ services:
       retries: 10
     environment:
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_PASSWORD=12345Feo
       - POSTGRES_DB=test_postgres
     ports:
       - "5433:5432"
