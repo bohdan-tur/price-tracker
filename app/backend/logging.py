@@ -1,4 +1,5 @@
 import logging
+import os
 from logging.config import dictConfig
 from pydantic import BaseModel
 
@@ -26,4 +27,8 @@ class LogConfig(BaseModel):
     }
 
 def setup_logging():
+
+    if not os.path.exists("logs"):
+        os.makedirs("logs", exist_ok=True)
+
     dictConfig(LogConfig().model_dump())
