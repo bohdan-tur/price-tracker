@@ -1,4 +1,4 @@
-version: '3.8'
+
 
 services:
   db:
@@ -34,8 +34,6 @@ services:
       - db
       - redis
 
-    env_file:
-      - .env
 
   celery_worker:
     build: .
@@ -45,8 +43,7 @@ services:
       - db
       - redis
       - api
-    env_file:
-      - .env
+
 
   celery_beat:
     build: .
@@ -56,8 +53,7 @@ services:
       - db
       - redis
       - celery_worker
-    env_file:
-      - .env
+
 
 volumes:
   postgres_data:
