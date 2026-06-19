@@ -7,7 +7,7 @@ import asyncio
 from app.backend.scraper import get_current_price
 from app.models.price_history import PriceHistory
 from celery.schedules import crontab
-
+from app.backend.dependencies import db_dependency
 
 
 celery_app = Celery("price_tracker",
@@ -26,42 +26,43 @@ celery_app.conf.update(
                                                 )
 
 
+async def process_prices_async(db:db_dependency) -> dict:
+    changes_count = 0
+    try:
+        result = await db.execute(select(Item))
+        items = result.scalars().all()
 
-async def process_prices_async() -> dict:
-    async with AsyncSessionLocal() as db:
-        changes_count = 0
-        try:
+        for item in items:
+            new_price = await get_current_price(str(item.url))
 
-            result = await db.execute(select(Item))
-            items = result.scalars().all()
+            if new_price and new_price != item.current_price:
+                new_price_history = PriceHistory(
+                    item_id=item.id,
+                    price=new_price
+                )
+                db.add(new_price_history)
 
-            for item in items:
+                item.current_price = new_price
+                changes_count += 1
 
-                new_price = await get_current_price(str(item.url))
+        await db.commit()
+        return {"status": "success", "updated_items": changes_count}
 
-                if new_price and new_price != item.current_price:
-                    new_price_history = PriceHistory(
-                        item_id=item.id,
-                        price=new_price
-                    )
-                    db.add(new_price_history)
+    except Exception as e:
+        await db.rollback()
+        return {"status": "error", "detail": str(e)}
 
-                    item.current_price = new_price
-                    changes_count += 1
-
-
-            await db.commit()
-            return {"status": "success", "updated_items": changes_count}
-
-        except Exception as e:
-            await db.rollback()
-            return {"status": "error", "detail": str(e)}
 
 
 @celery_app.task(name="update_item_prices")
 def update_item_prices() -> dict:
+    async def _run_task():
+        async with AsyncSessionLocal() as db:
+            return await process_prices_async(db)
 
-    return asyncio.run(process_prices_async())
+    return asyncio.run(_run_task())
+
+
 
 
 celery_app.conf.beat_schedule = {
