@@ -16,24 +16,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Create .env file
-        run: |
-          echo "POSTGRES_USER=postgres" >> .env
-          echo "POSTGRES_PASSWORD=postgres" >> .env
-          echo "POSTGRES_DB=price_tracker_test" >> .env
-          echo "DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/price_tracker_test" >> .env
-          echo "SECRET_KEY=supersecretkey" >> .env
-          echo "ACCESS_TOKEN_SECRET_KEY=test_access_key" >> .env
-          echo "REFRESH_TOKEN_SECRET_KEY=test_refresh_key" >> .env
-
-      - name: Build and start containers
-        run: docker compose up -d --build
-
-      - name: Wait for services to be ready
-        run: sleep 10
+      - name: Build and start infra
+        run: docker compose up -d db redis
 
       - name: Run Pytest
-        run: docker compose exec -T -e PYTHONPATH=/app api python -m pytest app/tests
+        run: |
+          docker compose run --rm \
+            -e DATABASE_URL=postgresql+asyncpg://postgres:12345Feo@db:5432/test_postgres \
+            -e PYTHONPATH=/app \
+            api python -m pytest app/tests
 
       - name: Stop containers
         if: always()

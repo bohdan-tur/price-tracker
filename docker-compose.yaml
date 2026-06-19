@@ -3,11 +3,15 @@ version: '3.8'
 services:
   db:
     image: postgres:15-alpine
-    container_name: price_tracker_db
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 12345Feo
-      POSTGRES_DB: price_tracker
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=test_postgres
     ports:
       - "5433:5432"
     volumes:
