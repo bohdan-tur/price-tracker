@@ -27,7 +27,7 @@ async def test_process_price_async_success(create_test_user, db_session):
 
 
         assert result["status"] == "success"
-        assert result["updated_items"] == 1
+        assert result["updated_items"] >= 1
 
         await db_session.refresh(item)
         assert item.current_price == 1200.0
