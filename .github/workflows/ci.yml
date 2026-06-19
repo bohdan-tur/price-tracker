@@ -32,6 +32,9 @@ jobs:
       - name: Wait for services to be ready
         run: sleep 10
 
+      - name: Show API logs (DEBUG)
+        run: docker compose logs api
+
       - name: Run Pytest
         run: docker compose exec -T api pytest
 
