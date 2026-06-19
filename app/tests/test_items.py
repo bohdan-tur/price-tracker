@@ -1,11 +1,10 @@
-from conftest import async_client
+
 from httpx import AsyncClient
 from app.models.item import Item
 from unittest.mock import patch
 from app.main import app
 from app.backend.dependencies import get_current_user
 from sqlalchemy import select
-from conftest import db_session
 
 
 async def test_get_items(async_client:AsyncClient,create_test_user):

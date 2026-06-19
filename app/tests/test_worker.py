@@ -1,9 +1,8 @@
 import pytest
 from unittest.mock import patch
 from app.backend.worker import process_prices_async
-from conftest import create_test_user
 from app.models.item import Item
-from conftest import db_session
+
 
 
 async def test_process_price_async_success(create_test_user, db_session):

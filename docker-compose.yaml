@@ -1,13 +1,17 @@
-version: '3.8'
+
 
 services:
   db:
     image: postgres:15-alpine
-    container_name: price_tracker_db
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 12345Feo
-      POSTGRES_DB: price_tracker
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=12345Feo
+      - POSTGRES_DB=test_postgres
     ports:
       - "5433:5432"
     volumes:
@@ -22,14 +26,20 @@ services:
   api:
     build: .
     container_name: price_tracker_api
+    environment:
+      - PYTHONPATH=/app
+      - DATABASE_URL=postgresql+asyncpg://postgres:12345Feo@db:5432/test_postgres
+      - ACCESS_TOKEN_SECRET_KEY=test_access_key
+      - REFRESH_TOKEN_SECRET_KEY=test_refresh_key
+      - SECRET_KEY=supersecretkey
     ports:
       - "8000:8000"
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
 
-    env_file:
-      - .env
 
   celery_worker:
     build: .
@@ -39,8 +49,7 @@ services:
       - db
       - redis
       - api
-    env_file:
-      - .env
+
 
   celery_beat:
     build: .
@@ -50,8 +59,7 @@ services:
       - db
       - redis
       - celery_worker
-    env_file:
-      - .env
+
 
 volumes:
   postgres_data:
