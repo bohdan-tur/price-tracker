@@ -28,11 +28,17 @@ services:
     container_name: price_tracker_api
     environment:
       - PYTHONPATH=/app
+      - DATABASE_URL=postgresql+asyncpg://postgres:12345Feo@db:5432/test_postgres
+      - ACCESS_TOKEN_SECRET_KEY=test_access_key
+      - REFRESH_TOKEN_SECRET_KEY=test_refresh_key
+      - SECRET_KEY=supersecretkey
     ports:
       - "8000:8000"
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
 
 
   celery_worker:
