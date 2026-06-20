@@ -8,9 +8,10 @@ from sqlalchemy.ext.asyncio import create_async_engine,async_sessionmaker,AsyncS
 import uuid
 from sqlalchemy import select
 from app.backend.security import get_password_hash
+from app.backend.config import settings
 
 
-DATABASE_URL ="postgresql+asyncpg://postgres:12345Feo@db:5432/test_postgres"
+DATABASE_URL = settings.TEST_DATABASE_URL
 
 test_engine = create_async_engine(DATABASE_URL,echo=False,poolclass=NullPool)
 

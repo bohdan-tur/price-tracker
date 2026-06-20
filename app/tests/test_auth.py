@@ -1,6 +1,6 @@
 import pytest
 from httpx import AsyncClient
-
+from app.backend.security import create_refresh_token
 
 async def test_register_user_success(async_client: AsyncClient, create_test_user):
     payload = {
@@ -74,3 +74,35 @@ async def test_protected_route_with_invalid_token(async_client):
 
         assert response.status_code == 401
         assert response.json()["detail"] == "Could not validate credentials"
+
+
+
+async def test_refresh_token_success(async_client,create_test_user):
+
+     user = await create_test_user( email="refresh@test.com")
+
+     valid_refresh_token = create_refresh_token(data = {"sub":str(user.id)})
+
+     response = await async_client.post("/auth/refresh_token", json={"refresh_token":valid_refresh_token })
+
+     assert response.status_code == 200
+     data = response.json()
+     assert "access_token" in data
+     assert data["token_type"] == "bearer"
+
+
+async def test_refresh_token_invalid_token(async_client,create_test_user):
+
+     user = await create_test_user( email="invalid@test.com")
+
+     fake_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.fake_payload.fake_signature"
+
+
+     response = await async_client.post(
+         "/auth/refresh_token",
+         json={"refresh_token": fake_token}
+     )
+
+
+     assert response.status_code == 401
+     assert response.json()["detail"] == "Could not validate credentials"

@@ -1,8 +1,12 @@
 import httpx
 import json
+import asyncio
 import re
 import logging
 from bs4 import BeautifulSoup
+import socket
+import ipaddress
+from urllib.parse import urlparse
 
 logger = logging.getLogger("root")
 
@@ -15,7 +19,44 @@ COMMON_SELECTORS = [
 ]
 
 
+async def is_safe_url(url: str) -> bool:
+
+    try:
+        parsed = urlparse(url)
+        if parsed.scheme not in ["http", "https"]:
+            return False
+
+        hostname = parsed.hostname
+        if not hostname:
+            return False
+
+        loop = asyncio.get_running_loop()
+
+
+        addr_info = await loop.getaddrinfo(hostname, None)
+
+
+        ip_str = addr_info[0][4][0]
+        ip_obj = ipaddress.ip_address(ip_str)
+
+
+        if ip_obj.is_loopback or ip_obj.is_private or ip_obj.is_multicast:
+            return False
+
+        return True
+    except Exception as e:
+        logger.warning(f"URL validation failed for {url}: {e}")
+        return False
+
+
+
 async def get_current_price(url: str) -> float | None:
+
+    if not await is_safe_url(url):
+        logger.error(f"SSRF attempt blocked or invalid URL: {url}")
+        return None
+
+
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         "Accept-Language": "uk-UA,uk;q=0.9,en-US;q=0.8,en;q=0.7",
