@@ -12,7 +12,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-
     env:
       ACCESS_TOKEN_SECRET_KEY: ${{ secrets.ACCESS_TOKEN_SECRET_KEY }}
       REFRESH_TOKEN_SECRET_KEY: ${{ secrets.REFRESH_TOKEN_SECRET_KEY }}
@@ -33,17 +32,28 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Debug Environment Variables
-        run: docker compose run --rm api printenv | grep POSTGRES
-
       - name: Build and start infra
-        run: docker compose up -d db redis
+        run: docker compose up -d db test_db redis
 
       - name: Build API image
         run: docker compose build api
 
       - name: Run Pytest
         run: docker compose run --rm api python -m pytest app/tests -v
+        continue-on-error: true
+        id: pytest_step
+
+      - name: Debug DB Logs (on failure)
+        if: always()
+        run: |
+          echo "--- LOGS FOR test_db ---"
+          docker compose logs test_db
+          echo "--- LOGS FOR db ---"
+          docker compose logs db
+
+      - name: Check Pytest Result
+        if: steps.pytest_step.outcome == 'failure'
+        run: exit 1
 
       - name: Stop containers
         if: always()
