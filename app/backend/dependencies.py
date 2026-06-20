@@ -21,13 +21,15 @@ async def get_current_user(db:db_dependency,token:Annotated[str,Depends(oauth2_s
     )
     try:
         payload = jwt.decode(token,settings.ACCESS_TOKEN_SECRET_KEY,algorithms=[settings.ALGORITHM])
-        email: str = payload.get("sub")
-        if email is None:
-            raise credentials_exception
-    except JWTError:
+        user_id_str: str = payload.get("sub")
+        if user_id_str is None:
             raise credentials_exception
 
-    query = await db.execute(select(User).where(User.email == email))
+        user_id = int(user_id_str)
+    except (JWTError,ValueError):
+            raise credentials_exception
+
+    query = await db.execute(select(User).where(User.id == user_id))
     user = query.scalar_one_or_none()
     if user is None:
         raise credentials_exception
