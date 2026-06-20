@@ -33,12 +33,19 @@ jobs:
           echo "TEST_POSTGRES_DB=${{ secrets.TEST_POSTGRES_DB }}" >> .env
           echo "TEST_DATABASE_URL=${{ secrets.TEST_DATABASE_URL }}" >> .env
 
+      - name: Debug Environment Variables
+        run: docker compose run --rm api printenv | grep POSTGRES
+
+
       - name: Build and start infra
         run: docker compose up -d db redis
+
+      - name: Build API image
+        run: docker compose build api
 
       - name: Run Pytest
         run: docker compose run --rm api python -m pytest app/tests -v
 
       - name: Stop containers
         if: always()
-        run: docker compose down
+        run: docker compose down -v
