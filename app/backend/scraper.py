@@ -52,7 +52,7 @@ async def is_safe_url(url: str) -> bool:
 
 async def get_current_price(url: str) -> float | None:
 
-    if not is_safe_url(url):
+    if not await is_safe_url(url):
         logger.error(f"SSRF attempt blocked or invalid URL: {url}")
         return None
 
