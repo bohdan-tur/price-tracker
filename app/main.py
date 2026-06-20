@@ -4,7 +4,11 @@ from app.routers import user
 from app.routers import item
 from app.backend.logging import setup_logging
 from contextlib import asynccontextmanager
+from fastapi.middleware.cors import CORSMiddleware
+from app.backend.config import settings
 import logging
+
+
 
 setup_logging()
 logger = logging.getLogger("root")
@@ -21,6 +25,23 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Price Tracker", description="Price Tracker API",lifespan=lifespan)
 
+
+origins = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5173",
+
+]
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 app.include_router(auth.router)
