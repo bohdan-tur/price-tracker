@@ -1,9 +1,12 @@
+
+
 services:
+
   db:
     image: postgres:15-alpine
-    command: ["postgres", "-c", "log_statement=all", "-c", "log_min_error_statement=debug1"]
+
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER}" ]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -12,9 +15,25 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
     ports:
-      - "5433:5432"
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
+
+  test_db:
+    image: postgres:15-alpine
+    command: ["postgres", "-c", "log_statement=all"]
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${TEST_POSTGRES_USER}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    environment:
+      - POSTGRES_USER=${TEST_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${TEST_POSTGRES_PASSWORD}
+      - POSTGRES_DB=${TEST_POSTGRES_DB}
+    ports:
+      - "5434:5432"
 
   redis:
     image: redis:7-alpine
@@ -43,9 +62,10 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      test_db:
+        condition: service_healthy
       redis:
         condition: service_started
-
 
   celery_worker:
     build: .
@@ -56,7 +76,6 @@ services:
       - redis
       - api
 
-
   celery_beat:
     build: .
     container_name: price_tracker_beat
@@ -65,7 +84,6 @@ services:
       - db
       - redis
       - celery_worker
-
 
 volumes:
   postgres_data:
