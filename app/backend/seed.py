@@ -1,10 +1,11 @@
 import asyncio
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
+
 from sqlalchemy import select
-from app.backend.db import Base
-from app.models.user import User
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
+
 from app.backend.config import settings
+from app.models.user import User
 from app.routers.auth import get_password_hash
 
 USERS_TO_SEED = [
@@ -13,23 +14,21 @@ USERS_TO_SEED = [
         "password": settings.SEED_ADMIN_PASSWORD,
         "is_superuser": True,
         "is_active": True,
-
     },
     {
         "email": "user4@example.com",
         "password": settings.SEED_USER_PASSWORD,
         "is_superuser": False,
         "is_active": True,
-
     },
     {
         "email": "user5@example.com",
         "password": settings.SEED_USER_PASSWORD,
         "is_superuser": False,
         "is_active": True,
-
     },
 ]
+
 
 async def seed_database():
     engine = create_async_engine(settings.DATABASE_URL, echo=True)
@@ -37,7 +36,9 @@ async def seed_database():
 
     async with async_session() as session:
         for user_data in USERS_TO_SEED:
-            result = await session.execute(select(User).where(User.email == user_data["email"]))
+            result = await session.execute(
+                select(User).where(User.email == user_data["email"])
+            )
             existing_user = result.scalar_one_or_none()
 
             if existing_user:
@@ -56,6 +57,7 @@ async def seed_database():
 
         await session.commit()
         print("Database seeding completed successfully!")
+
 
 if __name__ == "__main__":
     asyncio.run(seed_database())

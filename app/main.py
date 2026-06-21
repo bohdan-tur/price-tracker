@@ -1,15 +1,12 @@
-from fastapi import FastAPI
-from app.routers import auth
-from app.routers import user
-from app.routers import item
-from app.routers import health
-from app.backend.logging import setup_logging
-from contextlib import asynccontextmanager
-from fastapi.middleware.cors import CORSMiddleware
-from app.backend.config import settings
 import logging
+from contextlib import asynccontextmanager
 
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
+from app.backend.config import settings
+from app.backend.logging import setup_logging
+from app.routers import auth, health, item, user
 
 setup_logging()
 logger = logging.getLogger("root")
@@ -24,7 +21,7 @@ async def lifespan(app: FastAPI):
     logger.info("Application is shutting down")
 
 
-app = FastAPI(title="Price Tracker", description="Price Tracker API",lifespan=lifespan)
+app = FastAPI(title="Price Tracker", description="Price Tracker API", lifespan=lifespan)
 
 
 origins = [
@@ -32,7 +29,6 @@ origins = [
     "http://localhost:5173",
     "http://127.0.0.1:3000",
     "http://127.0.0.1:5173",
-
 ]
 
 
@@ -49,7 +45,3 @@ app.include_router(auth.router)
 app.include_router(user.router)
 app.include_router(item.router)
 app.include_router(health.router)
-
-
-
-

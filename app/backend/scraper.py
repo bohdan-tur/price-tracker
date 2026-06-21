@@ -1,12 +1,12 @@
-import httpx
-import json
 import asyncio
-import re
-import logging
-from bs4 import BeautifulSoup
-import socket
 import ipaddress
+import json
+import logging
+import re
 from urllib.parse import urlparse
+
+import httpx
+from bs4 import BeautifulSoup
 
 logger = logging.getLogger("root")
 
@@ -15,7 +15,7 @@ COMMON_SELECTORS = [
     ".js-current-price",
     ".price--current",
     ".price__value",
-    ".product-price"
+    ".product-price",
 ]
 
 
@@ -32,13 +32,10 @@ async def is_safe_url(url: str) -> bool:
 
         loop = asyncio.get_running_loop()
 
-
         addr_info = await loop.getaddrinfo(hostname, None)
-
 
         ip_str = addr_info[0][4][0]
         ip_obj = ipaddress.ip_address(ip_str)
-
 
         if ip_obj.is_loopback or ip_obj.is_private or ip_obj.is_multicast:
             return False
@@ -49,18 +46,16 @@ async def is_safe_url(url: str) -> bool:
         return False
 
 
-
 async def get_current_price(url: str) -> float | None:
 
     if not await is_safe_url(url):
         logger.error(f"SSRF attempt blocked or invalid URL: {url}")
         return None
 
-
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         "Accept-Language": "uk-UA,uk;q=0.9,en-US;q=0.8,en;q=0.7",
-        "Referer": "https://www.google.com/"
+        "Referer": "https://www.google.com/",
     }
 
     async with httpx.AsyncClient(headers=headers, follow_redirects=True) as client:
@@ -73,7 +68,8 @@ async def get_current_price(url: str) -> float | None:
             for script in scripts:
                 try:
                     data = json.loads(script.string)
-                    if isinstance(data, list): data = data[0]
+                    if isinstance(data, list):
+                        data = data[0]
                     if data.get("@type") == "Product":
                         offers = data.get("offers")
                         if isinstance(offers, dict):
@@ -90,7 +86,7 @@ async def get_current_price(url: str) -> float | None:
             price_element = soup.select_one(", ".join(COMMON_SELECTORS))
             if price_element:
                 raw_text = price_element.get_text(strip=True)
-                cleaned_text = re.sub(r'[^\d.]', '', raw_text.replace(',', '.'))
+                cleaned_text = re.sub(r"[^\d.]", "", raw_text.replace(",", "."))
 
                 if cleaned_text and len(cleaned_text) < 10:
                     return float(cleaned_text)
