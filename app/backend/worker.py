@@ -56,11 +56,18 @@ async def process_prices_async(db: db_dependency) -> dict:
     except Exception as e:
         await db.rollback()
         logger.error(f"Error during price processing: {str(e)}")
-        return {"status": "error", "detail": str(e)}
+
+        raise e
 
 
-@celery_app.task(name="update_item_prices")
-def update_item_prices() -> dict:
+@celery_app.task(name="update_item_prices",
+                 bind = T.rue,
+                 autoretry_for = (Exception,),
+                 retry_backoff=True,
+                 retry_backoff_max=3600,
+                 max_retries=5
+                 )
+def update_item_prices(self) -> dict:
     async def _run_task():
         async with AsyncSessionLocal() as db:
             return await process_prices_async(db)
