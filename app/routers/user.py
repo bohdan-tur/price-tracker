@@ -3,7 +3,7 @@ from app.schemas.user import UserResponse
 from fastapi import APIRouter, HTTPException
 from typing import Annotated
 from app.models.user import User
-from fastapi import Depends, status
+from fastapi import Depends, status,Query
 from app.schemas.password_change import PasswordChangeSchema
 from app.backend.security import verify_password, get_password_hash
 from sqlalchemy import select
@@ -36,12 +36,13 @@ async def delete_my_account(user: Annotated[User, Depends(get_current_user)], db
 
 
 @router.get("/", response_model=list[UserResponse], dependencies=[Depends(get_current_superuser)])
-async def get_all_users(db: db_dependency, limit: int = 100, skip: int = 0):
-    query = await db.execute(select(User).offset(skip).limit(limit))
-
-    users = query.scalars()
-    return users
-
+async def get_all_users(
+    db: db_dependency,
+    limit: Annotated[int, Query(default=10, ge=1, le=100, description="Number of users to return")] = 10,
+    offset: Annotated[int, Query(default=0, ge=0, description="Number of users to skip")] = 0
+):
+    query = await db.execute(select(User).offset(offset).limit(limit))
+    return query.scalars().all()
 
 @router.get("/{user_id}", response_model=UserResponse, dependencies=[Depends(get_current_superuser)])
 async def get_user_by_id(

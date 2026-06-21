@@ -1,10 +1,8 @@
-
-
 services:
 
   db:
     image: postgres:15-alpine
-
+    restart: unless-stopped
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER}" ]
       interval: 5s
@@ -37,12 +35,14 @@ services:
   redis:
     image: redis:7-alpine
     container_name: price_tracker_redis
+    restart: unless-stopped
     ports:
       - "6380:6379"
 
   api:
     build: .
     container_name: price_tracker_api
+    restart: unless-stopped
     environment:
       - PYTHONPATH=/app
       - DATABASE_URL=${DATABASE_URL}
@@ -69,6 +69,7 @@ services:
   celery_worker:
     build: .
     container_name: price_tracker_worker
+    restart: unless-stopped
     command: celery -A app.backend.worker.celery_app worker --loglevel=info
     depends_on:
       - db
@@ -78,6 +79,7 @@ services:
   celery_beat:
     build: .
     container_name: price_tracker_beat
+    restart: unless-stopped
     command: celery -A app.backend.worker.celery_app beat --loglevel=info
     depends_on:
       - db
