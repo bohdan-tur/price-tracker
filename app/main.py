@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from app.routers import auth
 from app.routers import user
 from app.routers import item
+from app.routers import health
 from app.backend.logging import setup_logging
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
@@ -47,6 +48,8 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(user.router)
 app.include_router(item.router)
+app.include_router(health.router)
+
 
 
 
