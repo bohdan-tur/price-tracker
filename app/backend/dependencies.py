@@ -34,8 +34,8 @@ async def get_current_user(
             raise credentials_exception
 
         user_id = int(user_id_str)
-    except (JWTError, ValueError):
-        raise credentials_exception
+    except (JWTError, ValueError) as e:
+        raise credentials_exception from e
 
     query = await db.execute(select(User).where(User.id == user_id))
     user = query.scalar_one_or_none()

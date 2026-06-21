@@ -88,13 +88,13 @@ async def refresh_token(request_data: RefreshTokenRequest, db: db_dependency) ->
 
         user_id = int(user_id_str)
 
-    except ExpiredSignatureError:
+    except ExpiredSignatureError as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has expired"
-        )
+        ) from e
 
-    except (JWTError, ValueError):
-        raise credentials_exception
+    except (JWTError, ValueError) as e:
+        raise credentials_exception from e
 
     query = await db.execute(select(User).where(User.id == user_id))
     user = query.scalar_one_or_none()

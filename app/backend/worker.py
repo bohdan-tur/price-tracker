@@ -40,7 +40,8 @@ async def process_prices_async(db: db_dependency) -> dict:
 
             if new_price and new_price != item.current_price:
                 logger.info(
-                    f"Price updated for item {item.id}: {item.current_price} -> {new_price}"
+                    f"Price updated for item {item.id}:"
+                    f" {item.current_price} -> {new_price}"
                 )
 
                 new_price_history = PriceHistory(item_id=item.id, price=new_price)

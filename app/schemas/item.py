@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, HttpUrl
+from pydantic import BaseModel, HttpUrl
 
 from app.schemas.price_history import PriceHistoryResponse
 
@@ -18,4 +18,5 @@ class ItemResponse(ItemBase):
     user_id: int
     price_histories: list[PriceHistoryResponse] = []
 
-    model_config = ConfigDict(from_attributes=True)
+    class Config:
+        from_attributes = True
