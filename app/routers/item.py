@@ -50,8 +50,8 @@ async def create_item(
 async def get_my_items(
     db: db_dependency,
     current_user: User = Depends(get_current_user),
-    limit: Annotated[int, Query(default=10, ge=1, le=100, description="Number of items to return")] = 10,
-    offset: Annotated[int, Query(default=0, ge=0, description="Number of items to skip")] = 0
+    limit: Annotated[int, Query( ge=1, le=100, description="Number of items to return")] = 10,
+    offset: Annotated[int, Query(ge=0, description="Number of items to skip")] = 0
 ):
     query = await db.execute(
         select(Item)

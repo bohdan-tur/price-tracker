@@ -61,7 +61,7 @@ async def process_prices_async(db: db_dependency) -> dict:
 
 
 @celery_app.task(name="update_item_prices",
-                 bind = T.rue,
+                 bind = True,
                  autoretry_for = (Exception,),
                  retry_backoff=True,
                  retry_backoff_max=3600,

@@ -38,8 +38,8 @@ async def delete_my_account(user: Annotated[User, Depends(get_current_user)], db
 @router.get("/", response_model=list[UserResponse], dependencies=[Depends(get_current_superuser)])
 async def get_all_users(
     db: db_dependency,
-    limit: Annotated[int, Query(default=10, ge=1, le=100, description="Number of users to return")] = 10,
-    offset: Annotated[int, Query(default=0, ge=0, description="Number of users to skip")] = 0
+    limit: Annotated[int, Query( ge=1, le=100, description="Number of users to return")] = 10,
+    offset: Annotated[int, Query( ge=0, description="Number of users to skip")] = 0
 ):
     query = await db.execute(select(User).offset(offset).limit(limit))
     return query.scalars().all()
