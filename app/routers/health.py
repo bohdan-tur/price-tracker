@@ -6,18 +6,18 @@ from app.backend.dependencies import db_dependency
 router = APIRouter(tags=["System"])
 
 
-@router.get("/live", summary="Liveness Probe")
-async def liveness_check(response: Response):
+@router.get("/live", status_code=status.HTTP_200_OK, response_model=dict, summary="Liveness Probe")
+async def liveness_check(response: Response) -> dict:
 
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
     return {"status": "pass"}
 
 
-@router.get("/ready", summary="Readiness Probe")
+@router.get("/ready", status_code=status.HTTP_200_OK, response_model=dict, summary="Readiness Probe")
 async def readiness_check(
         response: Response,
         db: db_dependency
-):
+) -> dict:
 
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
 

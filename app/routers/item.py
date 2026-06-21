@@ -16,7 +16,7 @@ async def create_item(
     item: ItemCreate,
     db: db_dependency,
     user: User = Depends(get_current_user)
-):
+) -> ItemResponse:
     fetched_price = await get_current_price(str(item.url))
 
     new_item = Item(
@@ -52,7 +52,7 @@ async def get_my_items(
     current_user: User = Depends(get_current_user),
     limit: Annotated[int, Query( ge=1, le=100, description="Number of items to return")] = 10,
     offset: Annotated[int, Query(ge=0, description="Number of items to skip")] = 0
-):
+) -> list[ItemResponse]:
     query = await db.execute(
         select(Item)
         .where(Item.user_id == current_user.id)
@@ -67,7 +67,7 @@ async def delete_item(
     item_id: int,
     db: db_dependency,
     current_user: User = Depends(get_current_user)
-):
+) -> None:
     query = await db.execute(
         select(Item).where(Item.id == item_id, Item.user_id == current_user.id)
     )

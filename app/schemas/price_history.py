@@ -1,5 +1,5 @@
 from datetime import datetime
-from pydantic import BaseModel,field_serializer
+from pydantic import BaseModel, field_serializer, ConfigDict
 
 class PriceHistoryResponse(BaseModel):
     id: int
@@ -11,5 +11,4 @@ class PriceHistoryResponse(BaseModel):
 
         return dt.strftime("%d.%m.%Y %H:%M:%S")
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

@@ -1,4 +1,5 @@
 import asyncio
+import os
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import select
@@ -10,24 +11,21 @@ from app.routers.auth import get_password_hash
 USERS_TO_SEED = [
     {
         "email": "admin@price-tracker.com",
-        "password": "adminpassword123",
+        "password": os.getenv("SEED_ADMIN_PASSWORD", "adminpassword123"),
         "is_superuser": True,
         "is_active": True,
-
     },
     {
         "email": "user4@example.com",
-        "password": "userpassword123",
+        "password": os.getenv("SEED_USER_PASSWORD", "userpassword123"),
         "is_superuser": False,
         "is_active": True,
-
     },
     {
         "email": "user5@example.com",
-        "password": "userpassword123",
+        "password": os.getenv("SEED_USER_PASSWORD", "userpassword123"),
         "is_superuser": False,
         "is_active": True,
-
     },
 ]
 

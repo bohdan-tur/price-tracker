@@ -15,7 +15,7 @@ from app.backend.config import settings
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-async def register_user(user_data: UserCreate, db: db_dependency):
+async def register_user(user_data: UserCreate, db: db_dependency) -> UserResponse:
       query = await db.execute(select(User).where(User.email == user_data.email))
       existing_user = query.scalar_one_or_none()
       if existing_user:
@@ -28,8 +28,8 @@ async def register_user(user_data: UserCreate, db: db_dependency):
       await db.refresh(new_user)
       return new_user
 
-@router.post("/login")
-async def login(form_data:Annotated[OAuth2PasswordRequestForm, Depends()], db: db_dependency):
+@router.post("/login", status_code=status.HTTP_200_OK, response_model=dict)
+async def login(form_data:Annotated[OAuth2PasswordRequestForm, Depends()], db: db_dependency) -> dict:
      query = await db.execute(select(User).where(User.email == form_data.username))
      user = query.scalar_one_or_none()
      if not user:
@@ -56,8 +56,8 @@ async def login(form_data:Annotated[OAuth2PasswordRequestForm, Depends()], db: d
 
 
 
-@router.post("/refresh_token")
-async def refresh_token(request_data: RefreshTokenRequest, db: db_dependency):
+@router.post("/refresh_token", status_code=status.HTTP_200_OK, response_model=dict)
+async def refresh_token(request_data: RefreshTokenRequest, db: db_dependency) -> dict:
 
     credentials_exception = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                                           detail = "Could not validate credentials",
