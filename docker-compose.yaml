@@ -17,7 +17,6 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-
   test_db:
     image: postgres:15-alpine
     healthcheck:
@@ -56,6 +55,9 @@ services:
       - ACCESS_TOKEN_SECRET_KEY=${ACCESS_TOKEN_SECRET_KEY}
       - REFRESH_TOKEN_SECRET_KEY=${REFRESH_TOKEN_SECRET_KEY}
       - ALGORITHM=${ALGORITHM}
+      - SEED_ADMIN_PASSWORD=${SEED_ADMIN_PASSWORD}
+      - SEED_USER_PASSWORD=${SEED_USER_PASSWORD}
+      - PYTHONUNBUFFERED=1
     ports:
       - "8000:8000"
     depends_on:
@@ -71,6 +73,10 @@ services:
     container_name: price_tracker_worker
     restart: unless-stopped
     command: celery -A app.backend.worker.celery_app worker --loglevel=info
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - SEED_ADMIN_PASSWORD=${SEED_ADMIN_PASSWORD}
+      - SEED_USER_PASSWORD=${SEED_USER_PASSWORD}
     depends_on:
       - db
       - redis
@@ -81,6 +87,10 @@ services:
     container_name: price_tracker_beat
     restart: unless-stopped
     command: celery -A app.backend.worker.celery_app beat --loglevel=info
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - SEED_ADMIN_PASSWORD=${SEED_ADMIN_PASSWORD}
+      - SEED_USER_PASSWORD=${SEED_USER_PASSWORD}
     depends_on:
       - db
       - redis

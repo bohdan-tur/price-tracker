@@ -16,7 +16,7 @@ class Settings(BaseSettings):
 
     ACCESS_TOKEN_SECRET_KEY: str
     REFRESH_TOKEN_SECRET_KEY: str
-    ALGORITHM: str = "HS256"
+    ALGORITHM: str
     ACCESS_TOKEN_EXPIRES_MINUTES: int = 20
     REFRESH_TOKEN_EXPIRES_DAYS: int = 14
 
@@ -25,6 +25,9 @@ class Settings(BaseSettings):
 
 
     DEBUG: bool = True
+
+    SEED_ADMIN_PASSWORD: str
+    SEED_USER_PASSWORD: str
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 

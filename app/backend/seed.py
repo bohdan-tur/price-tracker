@@ -1,5 +1,4 @@
 import asyncio
-import os
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import select
@@ -11,21 +10,24 @@ from app.routers.auth import get_password_hash
 USERS_TO_SEED = [
     {
         "email": "admin@price-tracker.com",
-        "password": os.getenv("SEED_ADMIN_PASSWORD", "adminpassword123"),
+        "password": settings.SEED_ADMIN_PASSWORD,
         "is_superuser": True,
         "is_active": True,
+
     },
     {
         "email": "user4@example.com",
-        "password": os.getenv("SEED_USER_PASSWORD", "userpassword123"),
+        "password": settings.SEED_USER_PASSWORD,
         "is_superuser": False,
         "is_active": True,
+
     },
     {
         "email": "user5@example.com",
-        "password": os.getenv("SEED_USER_PASSWORD", "userpassword123"),
+        "password": settings.SEED_USER_PASSWORD,
         "is_superuser": False,
         "is_active": True,
+
     },
 ]
 
@@ -39,7 +41,8 @@ async def seed_database():
             existing_user = result.scalar_one_or_none()
 
             if existing_user:
-                print(f"User {user_data['email']} already exists. Skipping.")
+                print(f"User {user_data['email']} already exists. Updating password.")
+                existing_user.hashed_password = get_password_hash(user_data["password"])
                 continue
 
             new_user = User(
