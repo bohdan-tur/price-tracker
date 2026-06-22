@@ -12,6 +12,9 @@ select = ["E", "W", "F", "I", "UP", "B"]
 
 ignore = ["B008"]
 
+[tool.ruff.lint.per-file-ignores]
+"migration/env.py" = ["F401"]
+
 [tool.ruff.format]
 
 quote-style = "double"
