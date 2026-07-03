@@ -1,6 +1,6 @@
 from httpx import AsyncClient
 
-from app.backend.security import create_refresh_token
+from app.core.security import create_refresh_token
 
 
 async def test_register_user_success(async_client: AsyncClient, create_test_user):

@@ -4,9 +4,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-from app.backend.config import settings
+from app.api.routers.auth import get_password_hash
+from app.core.config import settings
 from app.models.user import User
-from app.routers.auth import get_password_hash
 
 USERS_TO_SEED = [
     {

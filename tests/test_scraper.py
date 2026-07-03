@@ -1,6 +1,6 @@
 import httpx
 
-from app.backend.scraper import get_current_price
+from app.services.scraper import get_current_price
 
 
 async def test_get_current_price_success(httpx_mock):

@@ -1,7 +1,7 @@
 from unittest.mock import patch
 
-from app.backend.worker import process_prices_async
 from app.models.item import Item
+from app.worker.worker import process_prices_async
 
 
 async def test_process_price_async_success(create_test_user, db_session):
@@ -18,7 +18,7 @@ async def test_process_price_async_success(create_test_user, db_session):
     await db_session.commit()
     await db_session.refresh(item)
 
-    with patch("app.backend.worker.get_current_price", return_value=1200.0):
+    with patch("app.worker.worker.get_current_price", return_value=1200.0):
         result = await process_prices_async(db=db_session)
 
         assert result["status"] == "success"
