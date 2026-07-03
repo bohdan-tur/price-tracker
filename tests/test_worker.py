@@ -1,7 +1,7 @@
 from unittest.mock import patch
 
-from app.worker.worker import process_prices_async
 from app.models.item import Item
+from app.worker.worker import process_prices_async
 
 
 async def test_process_price_async_success(create_test_user, db_session):
