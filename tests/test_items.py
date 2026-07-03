@@ -60,7 +60,7 @@ async def test_create_item_success(async_client, create_test_user):
         "url": "https://rozetka.com.ua/ua/monitor_123/p12345/",
     }
 
-    with patch("app.routers.item.get_current_price", return_value=1500.0):
+    with patch("app.api.routers.item.get_current_price", return_value=1500.0):
         response = await async_client.post("/items/", json=payload)
 
     assert response.status_code == 201
