@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class PasswordChangeSchema(BaseModel):
@@ -6,3 +6,5 @@ class PasswordChangeSchema(BaseModel):
     new_password: str = Field(
         min_length=8, description="Password should be at least 8 characters long"
     )
+
+    model_config = ConfigDict(from_attributes=True)
