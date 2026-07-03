@@ -8,6 +8,7 @@ on:
       - feature/**
       - test/**
       - chore/**
+      - refactor/**
   pull_request:
     branches:
       - main
