@@ -72,7 +72,7 @@ services:
     build: .
     container_name: price_tracker_worker
     restart: unless-stopped
-    command: celery -A app.backend.worker.celery_app worker --loglevel=info
+    command: celery -A app.database.worker.celery_app worker --loglevel=info
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -96,7 +96,7 @@ services:
       build: .
       container_name: price_tracker_beat
       restart: unless-stopped
-      command: celery -A app.backend.worker.celery_app beat --loglevel=info
+      command: celery -A app.database.worker.celery_app beat --loglevel=info
       environment:
         - POSTGRES_USER=${POSTGRES_USER}
         - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}

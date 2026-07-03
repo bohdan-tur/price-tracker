@@ -4,12 +4,12 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from app.backend.dependencies import db_dependency, get_current_user
-from app.backend.scraper import get_current_price
+from app.api.dependencies import db_dependency, get_current_user
 from app.models.item import Item
 from app.models.price_history import PriceHistory
 from app.models.user import User
 from app.schemas.item import ItemCreate, ItemResponse
+from app.services.scraper import get_current_price
 
 router = APIRouter(prefix="/items", tags=["items"])
 

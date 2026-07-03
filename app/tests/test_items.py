@@ -3,7 +3,7 @@ from unittest.mock import patch
 from httpx import AsyncClient
 from sqlalchemy import select
 
-from app.backend.dependencies import get_current_user
+from app.api.dependencies import get_current_user
 from app.main import app
 from app.models.item import Item
 

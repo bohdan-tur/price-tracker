@@ -4,9 +4,9 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.backend.config import settings
-from app.backend.logging import setup_logging
-from app.routers import auth, health, item, user
+from app.api.routers import auth, health, item, user
+from app.core.config import settings
+from app.core.logging import setup_logging
 
 setup_logging()
 logger = logging.getLogger("root")

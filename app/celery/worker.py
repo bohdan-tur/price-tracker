@@ -5,11 +5,11 @@ from celery import Celery
 from celery.schedules import crontab
 from sqlalchemy import select
 
+from app.api.dependencies import db_dependency
 from app.backend.db import AsyncSessionLocal
-from app.backend.dependencies import db_dependency
-from app.backend.scraper import get_current_price
 from app.models.item import Item
 from app.models.price_history import PriceHistory
+from app.services.scraper import get_current_price
 
 logger = logging.getLogger("root")
 

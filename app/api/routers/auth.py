@@ -5,9 +5,9 @@ from fastapi.security import OAuth2PasswordRequestForm
 from jose import ExpiredSignatureError, JWTError, jwt
 from sqlalchemy import select
 
-from app.backend.config import settings
-from app.backend.dependencies import db_dependency
-from app.backend.security import (
+from app.api.dependencies import db_dependency
+from app.core.config import settings
+from app.core.security import (
     create_access_token,
     create_refresh_token,
     get_password_hash,

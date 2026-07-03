@@ -1,8 +1,8 @@
 from httpx import AsyncClient
 from sqlalchemy import select
 
-from app.backend.dependencies import get_current_superuser, get_current_user
-from app.backend.security import verify_password
+from app.api.dependencies import get_current_superuser, get_current_user
+from app.core.security import verify_password
 from app.main import app
 from app.models.user import User
 

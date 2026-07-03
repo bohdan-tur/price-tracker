@@ -3,7 +3,7 @@ import asyncio
 from fastapi import APIRouter, Response, status
 from sqlalchemy import text
 
-from app.backend.dependencies import db_dependency
+from app.api.dependencies import db_dependency
 
 router = APIRouter(tags=["System"])
 
