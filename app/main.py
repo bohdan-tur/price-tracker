@@ -24,8 +24,6 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Price Tracker", description="Price Tracker API", lifespan=lifespan)
 
 
-
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
