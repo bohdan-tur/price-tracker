@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
 
-from app.backend.db import Base, get_session
+from app.database.db import Base, get_session
 from app.core.config import settings
 from app.core.security import get_password_hash
 from app.main import app
