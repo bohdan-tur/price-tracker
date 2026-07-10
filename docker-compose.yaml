@@ -60,6 +60,8 @@ services:
       - PYTHONUNBUFFERED=1
     ports:
       - "8000:8000"
+    volumes:
+      - .:/app
     depends_on:
       db:
         condition: service_healthy
@@ -87,6 +89,8 @@ services:
       - ALGORITHM=${ALGORITHM}
       - SEED_ADMIN_PASSWORD=${SEED_ADMIN_PASSWORD}
       - SEED_USER_PASSWORD=${SEED_USER_PASSWORD}
+    volumes:
+      - .:/app
     depends_on:
       - db
       - redis
@@ -111,6 +115,8 @@ services:
         - ALGORITHM=${ALGORITHM}
         - SEED_ADMIN_PASSWORD=${SEED_ADMIN_PASSWORD}
         - SEED_USER_PASSWORD=${SEED_USER_PASSWORD}
+      volumes:
+        - .:/app
       depends_on:
         - db
         - redis
