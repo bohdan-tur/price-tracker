@@ -12,4 +12,4 @@ class User(Base):
     is_active: Mapped[bool] = mapped_column(default=True)
     is_superuser: Mapped[bool] = mapped_column(default=False)
 
-    items = relationship("Item", back_populates="owner")
+    items = relationship("Item", back_populates="owner", cascade="all, delete-orphan")
