@@ -10,7 +10,7 @@ class PriceHistory(Base):
     __tablename__ = "price_history"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    item_id: Mapped[int] = mapped_column(ForeignKey("items.id"))
+    item_id: Mapped[int] = mapped_column(ForeignKey("items.id", ondelete="CASCADE"))
     price: Mapped[float]
     recorded_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
