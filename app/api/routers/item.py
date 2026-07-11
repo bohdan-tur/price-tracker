@@ -34,7 +34,7 @@ async def create_item(
         history_record = PriceHistory(item_id=new_item.id, price=fetched_price)
         db.add(history_record)
 
-        await db.commit()
+    await db.commit()
 
     query = await db.execute(
         select(Item)
