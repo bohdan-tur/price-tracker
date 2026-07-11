@@ -27,3 +27,7 @@ htmlcov/
 
 logs/
 *.log
+
+
+celerybeat-schedule*
+celerybeat.pid
