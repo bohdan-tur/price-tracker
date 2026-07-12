@@ -210,7 +210,7 @@ TEST_POSTGRES_DB=test_price_tracker
 TEST_DATABASE_URL=postgresql+asyncpg://test_user:test_password_secret@db:5432/test_price_tracker
 
 # CORS
-CORS_ORIGINS=http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000
+CORS_ORIGINS='["http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:3000"]'
 ```
 
 **Key variables**
@@ -429,9 +429,9 @@ REFRESH_TOKEN_EXPIRES_DAYS=14
 
 Passwords are hashed using Argon2.
 
-## 👨‍💻 Author
+## 👤 Author
 
-**Bohdan Turevych**
+[Bohdan Turevych](https://www.linkedin.com/in/bohdan-turevych)
 
 * GitHub: [@bohdan-tur](https://github.com/bohdan-tur)
-* LinkedIn: **Bohdan Turevych**
+* LinkedIn: [Bohdan Turevych](https://www.linkedin.com/in/bohdan-turevych)
