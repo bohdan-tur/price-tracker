@@ -357,7 +357,8 @@ POST /items/
 
 | Method | Endpoint | Description |
 |---|---|---|
-| GET | `/health` | Application health check |
+| GET | `/live` | Liveness probe |
+| GET | `/ready` | Readiness probe |
 
 ## 🗄 Database Seeding
 
