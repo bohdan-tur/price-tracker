@@ -95,7 +95,7 @@ async def test_update_user_status_by_admin(
     target_user = await create_test_user(email="ban_me@test.com")
     app.dependency_overrides[get_current_superuser] = lambda: admin
 
-    response = await async_client.patch(f"/users/{target_user.id}/status")
+    response = await async_client.patch(f"/users/{target_user.id}/deactivate")
 
     assert response.status_code == 200
     await db_session.refresh(target_user)
@@ -110,7 +110,7 @@ async def test_admin_cannot_disable_another_admin(
     admin2 = await create_test_user(email="admin2_dis@test.com", is_superuser=True)
     app.dependency_overrides[get_current_superuser] = lambda: admin1
 
-    response = await async_client.patch(f"/users/{admin2.id}/status")
+    response = await async_client.patch(f"/users/{admin2.id}/deactivate")
 
     assert response.status_code == 400
     assert response.json()["detail"] == "Cannot change status of a superuser"
@@ -153,7 +153,7 @@ async def test_update_user_status_not_found(
     admin = await create_test_user(email="admin_status_404@test.com", is_superuser=True)
     app.dependency_overrides[get_current_superuser] = lambda: admin
 
-    response = await async_client.patch("/users/99999/status")
+    response = await async_client.patch("/users/99999/deactivate")
 
     assert response.status_code == 404
     assert response.json()["detail"] == "User not found"

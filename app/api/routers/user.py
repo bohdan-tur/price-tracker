@@ -76,8 +76,8 @@ async def get_user_by_id(user_id: int, db: db_dependency):
     return user
 
 
-@router.patch("/{user_id}/status", dependencies=[Depends(get_current_superuser)])
-async def update_user_status(user_id: int, db: db_dependency):
+@router.patch("/{user_id}/deactivate", dependencies=[Depends(get_current_superuser)])
+async def deactivate_user(user_id: int, db: db_dependency):
     query = await db.execute(select(User).where(User.id == user_id))
     user = query.scalar_one_or_none()
     if not user:
@@ -93,7 +93,27 @@ async def update_user_status(user_id: int, db: db_dependency):
 
     user.is_active = False
     await db.commit()
-    return {"msg": f"User {user_id} disabled successfully"}
+    return {"msg": f"User {user_id} deactivated successfully"}
+
+
+@router.patch("/{user_id}/activate", dependencies=[Depends(get_current_superuser)])
+async def activate_user(user_id: int, db: db_dependency):
+    query = await db.execute(select(User).where(User.id == user_id))
+    user = query.scalar_one_or_none()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
+
+    if user.is_superuser:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot change status of a superuser",
+        )
+
+    user.is_active = True
+    await db.commit()
+    return {"msg": f"User {user_id} activated successfully"}
 
 
 @router.delete("/{user_id}", dependencies=[Depends(get_current_superuser)])
