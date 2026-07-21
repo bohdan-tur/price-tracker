@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.routers import auth, health, item, user
 from app.core.config import settings
 from app.core.logging import setup_logging
+from app.database.seed import seed_database
 
 setup_logging()
 logger = logging.getLogger("root")
@@ -15,6 +16,15 @@ logger = logging.getLogger("root")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    logger.info("Application starting...")
+
+    try:
+        logger.info("Starting database seeding...")
+        await seed_database()
+        logger.info("Database seeding completed successfully.")
+    except Exception as e:
+        logger.error(f"Error during database seeding: {e}")
+
     logger.info("Application started successfully")
 
     yield
@@ -23,7 +33,6 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Price Tracker", description="Price Tracker API", lifespan=lifespan)
-
 
 app.add_middleware(
     CORSMiddleware,
