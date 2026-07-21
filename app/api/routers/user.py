@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 
 from app.api.dependencies import (
@@ -10,6 +10,7 @@ from app.api.dependencies import (
 )
 from app.core.security import get_password_hash, verify_password
 from app.models.user import User
+from app.schemas.pagination import PaginationParams, get_pagination
 from app.schemas.password_change import PasswordChangeSchema
 from app.schemas.user import UserResponse
 
@@ -17,7 +18,9 @@ router = APIRouter(prefix="/users", tags=["users"])
 
 
 @router.get("/me", response_model=UserResponse, status_code=status.HTTP_200_OK)
-async def get_current_logged_user(user: Annotated[User, Depends(get_current_user)]):
+async def get_current_logged_user(
+    user: Annotated[User, Depends(get_current_user)],
+) -> User:
     return user
 
 
@@ -36,7 +39,7 @@ async def change_password(
     return {"msg": "Password updated successfully"}
 
 
-@router.delete("/me/", status_code=status.HTTP_200_OK)
+@router.delete("/me", status_code=status.HTTP_200_OK)
 async def delete_my_account(
     user: Annotated[User, Depends(get_current_user)], db: db_dependency
 ):
@@ -52,12 +55,11 @@ async def delete_my_account(
 )
 async def get_all_users(
     db: db_dependency,
-    limit: Annotated[
-        int, Query(ge=1, le=100, description="Number of users to return")
-    ] = 10,
-    offset: Annotated[int, Query(ge=0, description="Number of users to skip")] = 0,
-):
-    query = await db.execute(select(User).offset(offset).limit(limit))
+    pagination: PaginationParams = Depends(get_pagination),
+) -> list[User]:
+    query = await db.execute(
+        select(User).offset(pagination.offset).limit(pagination.limit)
+    )
     return query.scalars().all()
 
 
@@ -66,7 +68,7 @@ async def get_all_users(
     response_model=UserResponse,
     dependencies=[Depends(get_current_superuser)],
 )
-async def get_user_by_id(user_id: int, db: db_dependency):
+async def get_user_by_id(user_id: int, db: db_dependency) -> User:
     query = await db.execute(select(User).where(User.id == user_id))
     user = query.scalar_one_or_none()
     if not user:
@@ -132,4 +134,4 @@ async def delete_user_hard(user_id: int, db: db_dependency):
 
     await db.delete(user)
     await db.commit()
-    return {"msg": f"User {user_id}  was  deleted"}
+    return {"msg": f"User {user_id} was deleted"}
