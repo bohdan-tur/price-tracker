@@ -1,6 +1,4 @@
-from typing import Annotated
-
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
@@ -9,6 +7,7 @@ from app.models.item import Item
 from app.models.price_history import PriceHistory
 from app.models.user import User
 from app.schemas.item import ItemCreate, ItemResponse
+from app.schemas.pagination import PaginationParams, get_pagination
 from app.services.scraper import get_current_price
 
 router = APIRouter(prefix="/items", tags=["items"])
@@ -48,17 +47,14 @@ async def create_item(
 async def get_my_items(
     db: db_dependency,
     current_user: User = Depends(get_current_user),
-    limit: Annotated[
-        int, Query(ge=1, le=100, description="Number of items to return")
-    ] = 10,
-    offset: Annotated[int, Query(ge=0, description="Number of items to skip")] = 0,
+    pagination: PaginationParams = Depends(get_pagination),
 ) -> list[ItemResponse]:
     query = await db.execute(
         select(Item)
         .where(Item.user_id == current_user.id)
         .options(selectinload(Item.price_histories))
-        .limit(limit)
-        .offset(offset)
+        .limit(pagination.limit)
+        .offset(pagination.offset)
     )
     return query.scalars().all()
 

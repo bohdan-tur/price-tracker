@@ -56,7 +56,7 @@ async def test_delete_my_account(
     user = await create_test_user(email="delete_me@test.com")
     app.dependency_overrides[get_current_user] = lambda: user
 
-    response = await async_client.delete("/users/me/")
+    response = await async_client.delete("/users/me")
 
     assert response.status_code == 200
     await db_session.refresh(user)
@@ -85,35 +85,6 @@ async def test_get_user_by_id(async_client: AsyncClient, create_test_user):
 
     assert response.status_code == 200
     assert response.json()["email"] == "target_id@test.com"
-    app.dependency_overrides.pop(get_current_superuser)
-
-
-async def test_update_user_status_by_admin(
-    async_client: AsyncClient, create_test_user, db_session
-):
-    admin = await create_test_user(email="admin_status@test.com", is_superuser=True)
-    target_user = await create_test_user(email="ban_me@test.com")
-    app.dependency_overrides[get_current_superuser] = lambda: admin
-
-    response = await async_client.patch(f"/users/{target_user.id}/deactivate")
-
-    assert response.status_code == 200
-    await db_session.refresh(target_user)
-    assert target_user.is_active is False
-    app.dependency_overrides.pop(get_current_superuser)
-
-
-async def test_admin_cannot_disable_another_admin(
-    async_client: AsyncClient, create_test_user
-):
-    admin1 = await create_test_user(email="admin1_dis@test.com", is_superuser=True)
-    admin2 = await create_test_user(email="admin2_dis@test.com", is_superuser=True)
-    app.dependency_overrides[get_current_superuser] = lambda: admin1
-
-    response = await async_client.patch(f"/users/{admin2.id}/deactivate")
-
-    assert response.status_code == 400
-    assert response.json()["detail"] == "Cannot change status of a superuser"
     app.dependency_overrides.pop(get_current_superuser)
 
 
@@ -147,9 +118,51 @@ async def test_get_user_by_id_not_found(async_client: AsyncClient, create_test_u
     app.dependency_overrides.pop(get_current_superuser)
 
 
-async def test_update_user_status_not_found(
+async def test_hard_delete_user_not_found(async_client: AsyncClient, create_test_user):
+    admin = await create_test_user(email="admin_delete_404@test.com", is_superuser=True)
+    app.dependency_overrides[get_current_superuser] = lambda: admin
+
+    response = await async_client.delete("/users/99999")
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "User not found"
+
+    app.dependency_overrides.pop(get_current_superuser)
+
+
+async def test_deactivate_user_success(
+    async_client: AsyncClient, create_test_user, db_session
+):
+    admin = await create_test_user(email="admin_status@test.com", is_superuser=True)
+    target_user = await create_test_user(email="ban_me@test.com")
+    app.dependency_overrides[get_current_superuser] = lambda: admin
+
+    response = await async_client.patch(f"/users/{target_user.id}/deactivate")
+
+    assert response.status_code == 200
+    await db_session.refresh(target_user)
+    assert target_user.is_active is False
+    app.dependency_overrides.pop(get_current_superuser)
+
+
+async def test_admin_cannot_deactivate_another_admin(
     async_client: AsyncClient, create_test_user
 ):
+    admin1 = await create_test_user(email="admin1_dis@test.com", is_superuser=True)
+    admin2 = await create_test_user(email="admin2_dis@test.com", is_superuser=True)
+    app.dependency_overrides[get_current_superuser] = lambda: admin1
+
+    response = await async_client.patch(f"/users/{admin2.id}/deactivate")
+
+    assert response.status_code == 400
+    assert response.json()["detail"] in [
+        "Cannot change status of a superuser",
+        "Action restricted for superusers",
+    ]
+    app.dependency_overrides.pop(get_current_superuser)
+
+
+async def test_deactivate_user_not_found(async_client: AsyncClient, create_test_user):
     admin = await create_test_user(email="admin_status_404@test.com", is_superuser=True)
     app.dependency_overrides[get_current_superuser] = lambda: admin
 
@@ -161,11 +174,50 @@ async def test_update_user_status_not_found(
     app.dependency_overrides.pop(get_current_superuser)
 
 
-async def test_hard_delete_user_not_found(async_client: AsyncClient, create_test_user):
-    admin = await create_test_user(email="admin_delete_404@test.com", is_superuser=True)
+async def test_activate_user_success(
+    async_client: AsyncClient, create_test_user, db_session
+):
+    admin = await create_test_user(email="admin_activate@test.com", is_superuser=True)
+    target_user = await create_test_user(email="unban_me@test.com")
+
+    target_user.is_active = False
+    db_session.add(target_user)
+    await db_session.commit()
+
     app.dependency_overrides[get_current_superuser] = lambda: admin
 
-    response = await async_client.delete("/users/99999")
+    response = await async_client.patch(f"/users/{target_user.id}/activate")
+
+    assert response.status_code == 200
+    await db_session.refresh(target_user)
+    assert target_user.is_active is True
+
+    app.dependency_overrides.pop(get_current_superuser)
+
+
+async def test_admin_cannot_activate_another_admin(
+    async_client: AsyncClient, create_test_user
+):
+    admin1 = await create_test_user(email="admin1_act@test.com", is_superuser=True)
+    admin2 = await create_test_user(email="admin2_act@test.com", is_superuser=True)
+
+    app.dependency_overrides[get_current_superuser] = lambda: admin1
+
+    response = await async_client.patch(f"/users/{admin2.id}/activate")
+
+    assert response.status_code == 400
+    assert response.json()["detail"] in [
+        "Cannot change status of a superuser",
+        "Action restricted for superusers",
+    ]
+    app.dependency_overrides.pop(get_current_superuser)
+
+
+async def test_activate_user_not_found(async_client: AsyncClient, create_test_user):
+    admin = await create_test_user(email="admin_act_404@test.com", is_superuser=True)
+    app.dependency_overrides[get_current_superuser] = lambda: admin
+
+    response = await async_client.patch("/users/99999/activate")
 
     assert response.status_code == 404
     assert response.json()["detail"] == "User not found"
