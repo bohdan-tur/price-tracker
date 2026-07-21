@@ -2,16 +2,15 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from jose import ExpiredSignatureError, JWTError, jwt
 from sqlalchemy import select
 
 from app.api.dependencies import db_dependency
-from app.core.config import settings
 from app.core.security import (
     create_access_token,
     create_refresh_token,
     get_password_hash,
     verify_password,
+    verify_refresh_token,
 )
 from app.models.user import User
 from app.schemas.refresh_token import RefreshTokenRequest
@@ -81,26 +80,9 @@ async def refresh_token(request_data: RefreshTokenRequest, db: db_dependency) ->
     )
 
     try:
-        payload = jwt.decode(
-            request_data.refresh_token,
-            settings.REFRESH_TOKEN_SECRET_KEY,
-            algorithms=[settings.ALGORITHM],
-        )
-
-        user_id_str: str = payload.get("sub")
-
-        if not user_id_str:
-            raise credentials_exception
-
-        user_id = int(user_id_str)
-
-    except ExpiredSignatureError as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has expired"
-        ) from e
-
-    except (JWTError, ValueError) as e:
-        raise credentials_exception from e
+        user_id = verify_refresh_token(request_data.refresh_token)
+    except HTTPException:
+        raise credentials_exception from None
 
     query = await db.execute(select(User).where(User.id == user_id))
     user = query.scalar_one_or_none()

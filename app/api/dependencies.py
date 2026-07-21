@@ -1,12 +1,11 @@
 from typing import Annotated
 
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
+from app.core.security import verify_access_token
 from app.database.db import get_session
 from app.models.user import User
 
@@ -17,37 +16,37 @@ db_dependency = Annotated[AsyncSession, Depends(get_session)]
 
 async def get_current_user(
     db: db_dependency, token: Annotated[str, Depends(oauth2_scheme)]
-):
-
+) -> User:
     credentials_exception = HTTPException(
-        status_code=401,
+        status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    try:
-        payload = jwt.decode(
-            token, settings.ACCESS_TOKEN_SECRET_KEY, algorithms=[settings.ALGORITHM]
-        )
-        user_id_str: str = payload.get("sub")
-        if user_id_str is None:
-            raise credentials_exception
 
-        user_id = int(user_id_str)
-    except (JWTError, ValueError) as e:
-        raise credentials_exception from e
+    try:
+        user_id = verify_access_token(token)
+    except HTTPException:
+        raise credentials_exception from None
 
     query = await db.execute(select(User).where(User.id == user_id))
     user = query.scalar_one_or_none()
+
     if user is None:
         raise credentials_exception
 
     if not user.is_active:
-        raise HTTPException(status_code=403, detail="Inactive user account")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Inactive user account"
+        )
 
     return user
 
 
-async def get_current_superuser(user: Annotated[User, Depends(get_current_user)]):
+async def get_current_superuser(
+    user: Annotated[User, Depends(get_current_user)],
+) -> User:
     if not user.is_superuser:
-        raise HTTPException(status_code=403, detail="Not enough permissions")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions"
+        )
     return user
