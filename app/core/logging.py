@@ -28,9 +28,15 @@ class LogConfig(BaseModel):
     }
 
 
-def setup_logging():
+def setup_logging() -> None:
 
-    if not os.path.exists("logs"):
+    try:
         os.makedirs("logs", exist_ok=True)
+    except (PermissionError, OSError):
+        config = LogConfig()
+        config.handlers = {"default": config.handlers["default"]}
+        config.loggers = {"root": {"handlers": ["default"], "level": "INFO"}}
+        dictConfig(config.model_dump())
+        return
 
     dictConfig(LogConfig().model_dump())
