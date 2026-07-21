@@ -4,8 +4,8 @@ import logging
 from celery import Celery
 from celery.schedules import crontab
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.dependencies import db_dependency
 from app.database.db import AsyncSessionLocal
 from app.models.item import Item
 from app.models.price_history import PriceHistory
@@ -27,7 +27,7 @@ celery_app.conf.update(
 )
 
 
-async def process_prices_async(db: db_dependency) -> dict:
+async def process_prices_async(db: AsyncSession) -> dict:
     changes_count = 0
     logger.info("Started processing prices update task.")
 
@@ -37,27 +37,25 @@ async def process_prices_async(db: db_dependency) -> dict:
 
         for item in items:
             new_price = await get_current_price(str(item.url))
-
             if new_price and new_price != item.current_price:
                 logger.info(
                     f"Price updated for item {item.id}:"
                     f" {item.current_price} -> {new_price}"
                 )
-
                 new_price_history = PriceHistory(item_id=item.id, price=new_price)
                 db.add(new_price_history)
-
                 item.current_price = new_price
                 changes_count += 1
 
-        await db.commit()
+        if changes_count > 0:
+            await db.commit()
+
         logger.info(f"Price update task completed. Items updated: {changes_count}")
         return {"status": "success", "updated_items": changes_count}
 
     except Exception as e:
         await db.rollback()
         logger.error(f"Error during price processing: {str(e)}")
-
         raise e
 
 
